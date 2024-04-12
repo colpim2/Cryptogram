@@ -3,7 +3,7 @@ import threading
 
 # Configure the server
 HOST = '127.0.0.1'  # Local IP address
-PORT = 65432        # Port to listen for connections
+PORT = 65438        # Port to listen for connections
 
 connected_clients = []
 max_connections = 2  # Maximum concurrent connections
@@ -24,7 +24,7 @@ def handle_client(client, address):
                 connected_clients.remove(client)
                 break
             decoded_message = message.decode()
-            print(f'Message received from {address}: {decoded_message}')
+            #print(f'Message received from {address}: {decoded_message}')
             # Forward the message to all connected clients except the sender
             for connected_client in connected_clients:
                 if connected_client != client:

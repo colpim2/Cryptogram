@@ -56,9 +56,9 @@ def generatingAsymmetricKeys():
 
 # 3. Encrypt random key using Alice's public key
 # message - symmetric random key 
-def encryption(publickey, random_key):
-    ciphertext = rsa.encrypt(random_key.encode('utf8'), publickey)
-    print(ciphertext)
+def encryption(publickey, data):
+    ciphertext = rsa.encrypt(data, publickey)
+    return ciphertext
 
 
 
