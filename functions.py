@@ -15,7 +15,7 @@ import rsa
 # 0. Read user's password
 # 1. Generating public and private keys(Asymmetric - RSA), random key(Symmetric - PBKDF)
 # 2. Store keys
-# 3. Encrypt random key using Alice's public key
+# 3. Encrypt symmetric key using Alice's public key
 # 4. Encrypt message using the random key using AES
 # 5. Apply digital signature to message using Bob's private key
 
@@ -29,22 +29,25 @@ import rsa
 # 9. Dencrypt message using the decrypt random key of prior step using AES
 
 
-
-# ---------------------- BOB -----------------------
-
+# ---------------------- BOTH ------------------------
 # 0. Read user's password
-# Flask
-
 # 1. Generating public and private keys(Asymmetric - RSA), random key(Symmetric - PBKDF)
+# 2. Store keys
+# 4. Encrypt message using the symmetric key using AES
+
+
 def symmetricKeys_PBKDF(password):
-    password = password
     salt = get_random_bytes(16)
-    keys = PBKDF2(password, salt, 64, count=1000000, hmac_hash_module=SHA512)
-    print(keys)
+    key = PBKDF2(password, salt, 64, count=1000000, hmac_hash_module=SHA512)
+    return key
 
 def generatingAsymmetricKeys():
     publickey, privatekey = rsa.newkeys(1024)
     return publickey, privatekey
+
+
+
+
 
 
 # 2. Store keys
@@ -110,8 +113,6 @@ def main():
     publickey, privatekey = generatingKeys()
     encryption(publickey, privatekey)
     digitalSignature_Hash(publickey, privatekey)
-
-main()
 
 
 
