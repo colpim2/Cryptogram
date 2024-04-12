@@ -6,6 +6,8 @@ from Crypto.Hash import SHA512
 from Crypto.Random import get_random_bytes
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
 
 import hmac
 import hashlib
@@ -40,23 +42,16 @@ import rsa
 
 def symmetricKeys_PBKDF(password):
     salt = get_random_bytes(16)
-    key = PBKDF2(password, salt, 64, count=1000000, hmac_hash_module=SHA512)
+    key = PBKDF2(password, salt, 32, count=1000000, hmac_hash_module=SHA512)
     return key
 
 def generatingAsymmetricKeys():
 
     key = RSA.generate(2048)
+    publicKey = key.publickey().export_key()
+    privateKey = key.export_key()
 
-    # Obtener la clave pública y privada
-    public_key = key.publickey().export_key()
-    private_key = key.export_key()
-
-    return public_key, private_key
-
-
-
-
-
+    return publicKey, privateKey
 
 # 2. Store keys
 # FRANCISCO
@@ -76,17 +71,25 @@ def decryptMessage(privateKey, ciphertext):
     return plaintext
 
 
-
-# message - symmetric random key 
-def encryption(publickey, data):
-    ciphertext = rsa.encrypt(data, publickey)
-    return ciphertext
-
-
-
 # 4. Encrypt message using the random key using AES
 
+def encryptMessageAES(symmetricKey, message):
+    message = message.encode()
+    iv = get_random_bytes(AES.block_size) #initializer vector
+    message = pad(message, AES.block_size)
+    cipher = AES.new(symmetricKey, AES.MODE_CBC, iv)
+    ciphertext = iv + cipher.encrypt(message)
 
+    return ciphertext
+
+def decryptMessageAES(symmetricKey, ciphertext):
+    iv = ciphertext[:AES.block_size] #get initializer vector
+    cipher = AES.new(symmetricKey, AES.MODE_CBC, iv)
+    message = cipher.decrypt(ciphertext[AES.block_size:])
+    message = unpad(message, AES.block_size)
+
+    message.decode()
+    return message
 
 # 5. Apply digital signature to message using Bob's private key
 def digitalSignature_Hash(privatekey,publickey):
@@ -113,28 +116,10 @@ def VerifyHash(original_hash,msj_received):
       print("Hash verification failed.")
       return 1
 
-# 7. Dencrypt random key using Alice's private key
-def dencryption(privatekey, cipher_random_key):
-    message2 = rsa.decrypt(cipher_random_key, privatekey)
-    print(message2)
-    print(message2.decode('utf8'))
-
-
 # 8. Verify digital signature with Bob's public key
 def verify_digitalSignature_Hash(privatekey,publickey, data, signature):
     rsa.verify(data, signature, publickey)
     data2 = 'Hello World2'.encode('utf8')
-
-
-
-
-# 9. Dencrypt message using the decrypt random key using AES
-
-
-def main():
-    publickey, privatekey = generatingKeys()
-    encryption(publickey, privatekey)
-    digitalSignature_Hash(publickey, privatekey)
 
 
 

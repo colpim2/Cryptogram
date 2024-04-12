@@ -10,16 +10,44 @@ from Crypto.Cipher import PKCS1_OAEP
 HOST = '127.0.0.1'  
 PORT = 65431     
 
-listening = False 
-createKeys = False
-createSymmetric = False
-publicKeyReceived = False 
-symmetricKey = None
-
 # Function to handle receiving messages from the server and other clients
-def receiveMessages(sock):
+def receiveInitMessages(sock, flags, keys):
 
-    global listening, createKeys, publicKeyReceived, createSymmetric, symmetricKey, privateKey
+    while flags["iniProtocol"]:
+        try:
+            message = sock.recv(1024)
+            if not message:
+                print('Disconnected from the server.')
+                break
+
+            if message == b"First":
+                flags["createSymmetric"] = True
+
+            elif message == b"Ok" and not flags["listening"]:
+                flags["listening"] = True
+                flags["createKeys"] = True
+
+            elif keys["publicReceived"] is None and message.startswith(b"-----BEGIN PUBLIC KEY-----"):
+                keys["publicReceived"] = RSA.import_key(message)
+                    
+            elif not flags["createSymmetric"] and keys["symmetric"] is None and message.startswith(b"SymmetricKey:"):
+                    encryptedSymmetricKey = message.split(b"SymmetricKey:", 1)[1]
+                    encryptedSymmetricKey = base64.b64decode(encryptedSymmetricKey)
+                    
+                    keys["symmetric"] = func.decryptMessage(keys["private"],encryptedSymmetricKey )
+
+                    print(keys["symmetric"])
+
+                    flags["iniProtocol"] = False
+                    sock.sendall(b"got it")
+
+            print('Message received:', message.decode('utf-8', 'ignore'))
+
+        except ConnectionResetError:
+            print('Connection closed abruptly.')
+            break
+
+def receiveMessages(sock, keys):
 
     while True:
         try:
@@ -28,79 +56,80 @@ def receiveMessages(sock):
                 print('Disconnected from the server.')
                 break
 
-            if not listening: # When we catch something we can start creating our keys
-                if message == b"First":
-                    createSymmetric = True
+            message = func.decryptMessageAES(keys["symmetric"], message)
+            message = message.decode()
+            print('\nMessage received:', message)
 
-                elif message == b"Ok":
-                    # 1 means there's someone listening
-                    # We send our public key 
-                    listening = True
-                    createKeys = True
-
-            if not publicKeyReceived: 
-                if message.startswith(b"-----BEGIN PUBLIC KEY-----"):
-                    publicKeyReceived = RSA.import_key(message)
-                    
-            if not createSymmetric and symmetricKey is None: 
-                if message.startswith(b"SymmetricKey:"):
-                    encryptedSymmetricKey = message.split(b"SymmetricKey:", 1)[1]
-                    encryptedSymmetricKey = base64.b64decode(encryptedSymmetricKey)
-                    
-                    symmetricKey = func.decryptMessage(privateKey,encryptedSymmetricKey )
-         
-                    print(symmetricKey)
-
-            print('Message received:', message.decode('utf-8', 'ignore'))
         except ConnectionResetError:
             print('Connection closed abruptly.')
             break
 
+def main():
 
-# Create a TCP/IP socket
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-    # Connect to the server
-    client.connect((HOST, PORT))
+    flags = {
+        "listening" : False, 
+        "createKeys" : False,
+        "createSymmetric" : False, 
+        "iniProtocol" : True
+    }
 
-    # Start a thread for receiving messages
-    receive_thread = threading.Thread(target=receiveMessages, args=(client,))
-    receive_thread.start()
+    keys = {
+        "publicReceived" : None, 
+        "symmetric" : None,
+        "public" : None, 
+        "private" : None
+    }
 
-    
-    while True:
-        # Send messages to the server until we get an Ok from another client. 
-        if not listening: 
+
+    # Create a TCP/IP socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
+        # Connect to the server
+        client.connect((HOST, PORT))
+
+        # Start a thread for receiving init messages
+        receive_thread = threading.Thread(target=receiveInitMessages, args=(client, flags, keys))
+        receive_thread.start()
+
+        while not flags["listening"]:
+            # Send messages to the server until we get an Ok from another client. 
             time.sleep(5)
             message = "Ok"
             client.sendall(message.encode())
-        else: 
-            
 
-            if createKeys: 
-                publicKey, privateKey = func.generatingAsymmetricKeys()
+        if flags["createKeys"]: 
+            keys["public"], keys["private"] = func.generatingAsymmetricKeys()
+            client.sendall(keys["public"])
+            flags["createKeys"] = False
 
-                client.sendall(publicKey)
-                createKeys = False
+        while flags["createSymmetric"]: 
+            if isinstance(keys["publicReceived"], RSA.RsaKey):
+                password = input("Enter the password: ")
+                keys["symmetric"] = func.symmetricKeys_PBKDF(password)
 
-            if createSymmetric: 
-                if isinstance(publicKeyReceived, RSA.RsaKey):
-                    password = input("Enter the password: ")
-                    symmetricKey = func.symmetricKeys_PBKDF(password)
+                print(keys["symmetric"])
 
-                    print(symmetricKey)
+                encryptedKey = func.encryptMessage(keys["publicReceived"], keys["symmetric"])
+                encryptedKey = base64.b64encode(encryptedKey)
+                encryptedKey = b"SymmetricKey:" + encryptedKey
 
-                    encryptedKey = func.encryptMessage(publicKeyReceived, symmetricKey)
-                    
-                    # Convertir la clave simétrica cifrada a base64 para facilitar su envío
-                    encryptedKey = base64.b64encode(encryptedKey)
-                    encryptedKey = b"SymmetricKey:" + encryptedKey
-                    client.sendall(encryptedKey)
-                    createSymmetric = False
-
-            #message = input('Enter a message to send to the server (type "exit" to quit): ')
-            #client.sendall(message.encode())
+                client.sendall(encryptedKey)
+                flags["iniProtocol"] = False
+                flags["createSymmetric"] = False
+                
         
-        if message.lower() == 'exit':
-            break
+        receive_thread.join()
 
-print('Connection closed.')
+        receive_thread = threading.Thread(target=receiveMessages, args=(client, keys))
+        receive_thread.start()
+
+        while True: 
+            message = input('Enter a message to send to the server (type "exit" to quit): ')
+        
+            if message.lower() == 'exit':
+                break
+            else: 
+                message = func.encryptMessageAES(keys["symmetric"], message)
+                client.sendall(message)
+
+
+main()
