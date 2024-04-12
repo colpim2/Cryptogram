@@ -2,24 +2,24 @@ import socket
 import threading
 import functions as func
 import time
-import rsa
+import base64
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 
 # Configure the client
 HOST = '127.0.0.1'  
-PORT = 65438     
+PORT = 65431     
 
 listening = False 
 createKeys = False
 createSymmetric = False
-publicKeyReceived = None 
+publicKeyReceived = False 
 symmetricKey = None
 
 # Function to handle receiving messages from the server and other clients
 def receiveMessages(sock):
 
-    global listening, createKeys, publicKeyReceived, createSymmetric, symmetricKey
+    global listening, createKeys, publicKeyReceived, createSymmetric, symmetricKey, privateKey
 
     while True:
         try:
@@ -28,29 +28,30 @@ def receiveMessages(sock):
                 print('Disconnected from the server.')
                 break
 
-            message = message.decode()
-
             if not listening: # When we catch something we can start creating our keys
-                if message == "First":
+                if message == b"First":
                     createSymmetric = True
-                elif message == "Ok":
+
+                elif message == b"Ok":
                     # 1 means there's someone listening
                     # We send our public key 
                     listening = True
                     createKeys = True
 
-            if publicKeyReceived == None: 
-                if message.startswith("-----BEGIN RSA PUBLIC KEY-----"):
-                    publicKeyReceived = message
-                    publicKeyReceived = RSA.import_key(publicKeyReceived)
+            if not publicKeyReceived: 
+                if message.startswith(b"-----BEGIN PUBLIC KEY-----"):
+                    publicKeyReceived = RSA.import_key(message)
+                    
+            if not createSymmetric and symmetricKey is None: 
+                if message.startswith(b"SymmetricKey:"):
+                    encryptedSymmetricKey = message.split(b"SymmetricKey:", 1)[1]
+                    encryptedSymmetricKey = base64.b64decode(encryptedSymmetricKey)
+                    
+                    symmetricKey = func.decryptMessage(privateKey,encryptedSymmetricKey )
+         
+                    print(symmetricKey)
 
-            if not createSymmetric and symmetricKey == None: 
-                if message.startswith("SymmetricKey:"):
-                    symmetricKey = message.split("SymmetricKey:", 1)[1]
-                    cipherRSA = PKCS1_OAEP.new(privateKey)
-                    symmetricKey = cipherRSA.decrypt(symmetricKey)
-
-            print('Message received:', message)
+            print('Message received:', message.decode('utf-8', 'ignore'))
         except ConnectionResetError:
             print('Connection closed abruptly.')
             break
@@ -77,23 +78,24 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
 
             if createKeys: 
                 publicKey, privateKey = func.generatingAsymmetricKeys()
-                message = publicKey.save_pkcs1().decode()
-                client.sendall(message.encode())
+
+                client.sendall(publicKey)
                 createKeys = False
 
             if createSymmetric: 
-                password = input("Enter the password: ")
-                symmetricKey = func.symmetricKeys_PBKDF(password)
+                if isinstance(publicKeyReceived, RSA.RsaKey):
+                    password = input("Enter the password: ")
+                    symmetricKey = func.symmetricKeys_PBKDF(password)
 
-                
-                cipherRSA = PKCS1_OAEP.new(publicKeyReceived)
-                encryptedKey = cipherRSA.encrypt(symmetricKey)
-                
-                encryptedKey = b"SymmetricKey:" + encryptedKey
+                    print(symmetricKey)
 
-                client.sendall(encryptedKey)
-
-                createSymmetric = False
+                    encryptedKey = func.encryptMessage(publicKeyReceived, symmetricKey)
+                    
+                    # Convertir la clave simétrica cifrada a base64 para facilitar su envío
+                    encryptedKey = base64.b64encode(encryptedKey)
+                    encryptedKey = b"SymmetricKey:" + encryptedKey
+                    client.sendall(encryptedKey)
+                    createSymmetric = False
 
             #message = input('Enter a message to send to the server (type "exit" to quit): ')
             #client.sendall(message.encode())

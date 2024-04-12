@@ -4,6 +4,8 @@
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Hash import SHA512
 from Crypto.Random import get_random_bytes
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 
 import hmac
 import hashlib
@@ -42,8 +44,14 @@ def symmetricKeys_PBKDF(password):
     return key
 
 def generatingAsymmetricKeys():
-    publickey, privatekey = rsa.newkeys(1024)
-    return publickey, privatekey
+
+    key = RSA.generate(2048)
+
+    # Obtener la clave pública y privada
+    public_key = key.publickey().export_key()
+    private_key = key.export_key()
+
+    return public_key, private_key
 
 
 
@@ -55,6 +63,20 @@ def generatingAsymmetricKeys():
 
 
 # 3. Encrypt random key using Alice's public key
+
+def encryptMessage(publicKey, message):
+    cipher = PKCS1_OAEP.new(publicKey)
+    ciphertext = cipher.encrypt(message)
+    return ciphertext
+
+def decryptMessage(privateKey, ciphertext):
+    key = RSA.import_key(privateKey)
+    cipher = PKCS1_OAEP.new(key)
+    plaintext = cipher.decrypt(ciphertext)
+    return plaintext
+
+
+
 # message - symmetric random key 
 def encryption(publickey, data):
     ciphertext = rsa.encrypt(data, publickey)
