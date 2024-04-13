@@ -1,13 +1,13 @@
 # Importar modulo Cryto usando el comando
 # pip3 install pycryptodome
 
-from Crypto.Protocol.KDF import PBKDF2
-from Crypto.Hash import SHA512
-from Crypto.Random import get_random_bytes
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
+from Cryptodome.Protocol.KDF import PBKDF2
+from Cryptodome.Hash import SHA512
+from Cryptodome.Random import get_random_bytes
+from Cryptodome.PublicKey import RSA
+from Cryptodome.Cipher import PKCS1_OAEP
+from Cryptodome.Cipher import AES
+from Cryptodome.Util.Padding import pad, unpad
 
 import hmac
 import hashlib
@@ -51,11 +51,21 @@ def generatingAsymmetricKeys():
     publicKey = key.publickey().export_key()
     privateKey = key.export_key()
 
-    return publicKey, privateKey
+    return publicKey, privateKey, key
 
 # 2. Store keys
 # FRANCISCO
+def saveCipherPrivateKey(key, password, path):
+    cipher_privatekey = key.export_key(passphrase=password, pkcs=8, protection="scryptAndAES128-CBC")
+    with open(path, 'wb') as f:
+        f.write(cipher_privatekey)
 
+def getCipherPrivateKey(password, path):
+    with open(path, 'rb') as f:
+        private_key_encrypted = f.read()
+    password = "mypassword"
+    private_key = RSA.import_key(private_key_encrypted, passphrase=password)
+    return private_key.export_key()
 
 # 3. Encrypt random key using Alice's public key
 

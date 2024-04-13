@@ -3,12 +3,13 @@ import threading
 import functions as func
 import time
 import base64
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
+from Cryptodome.PublicKey import RSA
+from Cryptodome.Cipher import PKCS1_OAEP
 
 # Configure the client
 HOST = '127.0.0.1'  
 PORT = 65431     
+cliente = {"A" : False, "B": False}
 
 # Function to handle receiving messages from the server and other clients
 def receiveInitMessages(sock, flags, keys):
@@ -22,8 +23,10 @@ def receiveInitMessages(sock, flags, keys):
 
             if message == b"First":
                 flags["createSymmetric"] = True
+                cliente["A"] = True
 
             elif message == b"Ok" and not flags["listening"]:
+                cliente["B"] = True
                 flags["listening"] = True
                 flags["createKeys"] = True
 
@@ -77,7 +80,8 @@ def main():
         "publicReceived" : None, 
         "symmetric" : None,
         "public" : None, 
-        "private" : None
+        "private" : None,
+        "key": None # Used to saved the key gave for RSA, to export the cipher private key using the user´s password and saved it into a file
     }
 
 
@@ -97,7 +101,7 @@ def main():
             client.sendall(message.encode())
 
         if flags["createKeys"]: 
-            keys["public"], keys["private"] = func.generatingAsymmetricKeys()
+            keys["public"], keys["private"], keys["key"] = func.generatingAsymmetricKeys()
             client.sendall(keys["public"])
             flags["createKeys"] = False
 
@@ -105,6 +109,13 @@ def main():
             if isinstance(keys["publicReceived"], RSA.RsaKey):
                 password = input("Enter the password: ")
                 keys["symmetric"] = func.symmetricKeys_PBKDF(password)
+                try:
+                    if cliente["A"] == True:
+                        func.saveCipherPrivateKey(keys["key"], password, 'private_key_encrypted_A.pem')
+                    else:  
+                        func.saveCipherPrivateKey(keys["key"], password, 'private_key_encrypted_B.pem')
+                except Exception as e:
+                    print("Something was wrong saving the private key")
 
                 print(keys["symmetric"])
 
