@@ -1,0 +1,20 @@
+{% extends 'base.html' %} {% block content %}
+<form method="post" class="formDisplay">
+  <h3>Iniciar Envio de mensajes</h3>
+  <div class="join">
+    <label>Nombre: </label>
+    <input type="text" placeholder="Inserta tu nombre" name="name" value="{{name}}" />
+  </div>
+  <div class="join">
+    <label>Contraseña: </label>
+    <input type="text" placeholder="Inserta tu contraseña" name="password" value="{{password}}" />
+  </div>
+  <button type="submit" name="join" class="join-btn">Unirse</button>
+  
+  {% if error %}
+  <ul>
+    <li>{{error}}</li>
+  </ul>
+  {% endif %}
+</form>
+{% endblock %}

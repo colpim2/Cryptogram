@@ -1,0 +1,10 @@
+{% extends 'base.html' %} {% block content %}
+<div class="message-box">
+  <div class="messages" id="messages"></div>
+  <div class="inputs">
+    <input type="text" rows="3" placeholder="Message" name="message" id="message" />
+    <button type="button" name="send" id="send-btn" onClick="sendMessage()"> Enviar </button>
+  </div>
+</div>
+
+{% endblock %}
