@@ -3,6 +3,8 @@ import threading
 import functions as func
 import time
 import base64
+import pickle 
+import io
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 
@@ -59,9 +61,16 @@ def receiveMessages(sock, keys):
                 print('Disconnected from the server.')
                 break
 
-            message = func.decryptMessageAES(keys["symmetric"], message)
-            message = message.decode()
-            print('\nMessage received:', message)
+            message, signature = message.split(b"<delimiter>")
+            #message =  base64.b64decode(message)
+            #signature = base64.b64decode(signature)
+
+            if func.verifySignature(message, signature, keys["public"]):
+                message = func.decryptMessageAES(keys["symmetric"], message)
+                message = message.decode()
+                print('\nVerified message received:', message)
+            else: 
+                print('\nThe message has been corrupted.')
 
         except ConnectionResetError:
             print('Connection closed abruptly.')
@@ -129,7 +138,7 @@ def main():
             else:  
                 password = input("Enter the password: ")
                 func.saveCipherPrivateKey(keys["key"], password, 'private_key_encrypted_B.pem')
-                
+
         except Exception as e:
             print("Something was wrong saving the private key")
 
@@ -143,7 +152,12 @@ def main():
                 break
             else: 
                 message = func.encryptMessageAES(keys["symmetric"], message)
-                client.sendall(message)
+                signature = func.signMessage(message, keys["private"])
+
+                signature = base64.b64encode(signature)
+                #signature = signature.sign()
+                
+                client.sendall(message+b"<delimiter>"+signature)
 
 
 main()

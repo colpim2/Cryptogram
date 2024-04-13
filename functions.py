@@ -1,17 +1,18 @@
 # Importar modulo Cryto usando el comando
 # pip3 install pycryptodome
 
-from Cryptodome.Protocol.KDF import PBKDF2
-from Cryptodome.Hash import SHA512
-from Cryptodome.Random import get_random_bytes
-from Cryptodome.PublicKey import RSA
-from Cryptodome.Cipher import PKCS1_OAEP
-from Cryptodome.Cipher import AES
-from Cryptodome.Util.Padding import pad, unpad
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Hash import SHA512, SHA3_256
+from Crypto.Random import get_random_bytes
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Signature import PKCS1_v1_5
 
 import hmac
 import hashlib
-
+import pickle 
 import rsa
 
 
@@ -100,6 +101,22 @@ def decryptMessageAES(symmetricKey, ciphertext):
 
     message.decode()
     return message
+
+def signMessage(message, privateKey):
+    privateKey = RSA.import_key(privateKey)
+    h = SHA3_256.new(message)
+    signature = PKCS1_v1_5.new(privateKey)
+    return signature.sign(h)
+
+def verifySignature(message, signature, publicKey):
+    publicKey = RSA.import_key(publicKey)
+    h = SHA3_256.new(message)
+    verifier = PKCS1_v1_5.new(publicKey)
+    if verifier.verify(h,signature):
+        return True
+    else :
+        return False 
+
 
 # 5. Apply digital signature to message using Bob's private key
 def digitalSignature_Hash(privatekey,publickey):
