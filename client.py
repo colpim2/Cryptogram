@@ -62,10 +62,10 @@ def receiveMessages(sock, keys):
                 break
 
             message, signature = message.split(b"<delimiter>")
-            #message =  base64.b64decode(message)
-            #signature = base64.b64decode(signature)
 
-            if func.verifySignature(message, signature, keys["public"]):
+            signature = base64.b64decode(signature)
+
+            if func.verifySignature(message, signature, keys["publicReceived"]):
                 message = func.decryptMessageAES(keys["symmetric"], message)
                 message = message.decode()
                 print('\nVerified message received:', message)

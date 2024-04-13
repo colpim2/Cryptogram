@@ -109,7 +109,6 @@ def signMessage(message, privateKey):
     return signature.sign(h)
 
 def verifySignature(message, signature, publicKey):
-    publicKey = RSA.import_key(publicKey)
     h = SHA3_256.new(message)
     verifier = PKCS1_v1_5.new(publicKey)
     if verifier.verify(h,signature):
