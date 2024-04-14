@@ -3,7 +3,26 @@
   <div class="messages" id="messages"></div>
   <div class="inputs">
     <input type="text" rows="3" placeholder="Message" name="message" id="message" />
-    <button type="button" name="send" id="send-btn" onClick="sendMessage()"> Enviar </button>
+        
+    <ul id="messages"></ul>
+    <input id="message_input" autocomplete="off" /><button onclick="sendMessage()">Send</button>
+
+    <script>
+        var socket = io();
+
+        socket.on('message', function(msg) {
+            var item = document.createElement('li');
+            item.textContent = msg;
+            document.getElementById('messages').appendChild(item);
+        });
+
+        function sendMessage() {
+            var messageInput = document.getElementById('message_input');
+            var message = messageInput.value;
+            socket.emit('message', message);
+            messageInput.value = '';
+        }
+    </script>
   </div>
 </div>
 
