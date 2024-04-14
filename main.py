@@ -46,13 +46,15 @@ def disconnect():
 def message(data):
     content = {
         "name": session.get("name"),
-        "message": data["data"]
+        #"message": data["data"]
     }
-    print(f"{session.get('name')} said: {data['data']}")
+    #print(f"{session.get('name')} said: {data['data']}")
+    print(f"{session.get('name')} said:" + data)
+    socketio.emit('message', data)
 
 # Initialize app server
 if __name__ == "__main__":
-  socketio.run(app,debug=True)  #True: Automatic refresh
+  socketio.run(app,debug=True, allow_unsafe_werkzeug=True)  #True: Automatic refresh
 
 
 
