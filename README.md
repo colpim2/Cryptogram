@@ -47,7 +47,9 @@ python main_global_B.py
 
 - Open your browser and connect as follows:
   - Connect User 1 to [http://127.0.0.1:5000](http://127.0.0.1:5000)
-  - Connect User 2 to [http://127.0.0.1:5000](http://127.0.0.1:5000)
+  - Connect User 2 to [http://127.0.0.1:5001](http://127.0.0.1:5001)
+- Log into the app. The password provided will be used to generated the symmetric key and create the key to encrypt the private key, which will then be stored in a file on our computer.
+- Send a message
  
 ### Command-Line Interface (CLI) Version 
 - Run the following commands on different terminals in the following order:
@@ -63,7 +65,7 @@ python client.py
 ```bash
 python client.py
 ```
-The command-line interface (CLI) will prompt for a password. This will be used to generate the asymmetric key and create the key to encrypt the private key, which will then be stored in a file on our computer.
+The command-line interface (CLI) will prompt for a password. This will be used to generate the symmetric key and create the key to encrypt the private key, which will then be stored in a file on our computer.
 
 ## 4. Video <a name="video"></a>
 
