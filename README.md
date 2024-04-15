@@ -34,6 +34,7 @@ git clone https://github.com/colpim2/Cryptogram
 ```
 
 ## 3. Execution <a name="execution"></a>
+### Web Interface Version 
 
 - Run the following commands in the terminal:
 
@@ -47,6 +48,22 @@ python main_global_B.py
 - Open your browser and connect as follows:
   - Connect User 1 to [http://127.0.0.1:5000](http://127.0.0.1:5000)
   - Connect User 2 to [http://127.0.0.1:5000](http://127.0.0.1:5000)
+ 
+### Command-Line Interface (CLI) Version 
+- Run the following commands on different terminals in the following order:
+
+```bash
+python server.py
+```
+
+```bash
+python client.py
+```
+
+```bash
+python client.py
+```
+The command-line interface (CLI) will prompt for a password. This will be used to generate the asymmetric key and create the key to encrypt the private key, which will then be stored in a file on our computer.
 
 ## 4. Video <a name="video"></a>
 
