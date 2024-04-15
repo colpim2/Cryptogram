@@ -1,6 +1,6 @@
 import socket
 import threading
-import functions as func
+import functions2 as func
 import time
 import base64
 import pickle 
@@ -41,7 +41,7 @@ def receiveInitMessages(sock, flags, keys):
                     
                     keys["symmetric"] = func.decryptMessage(keys["private"],encryptedSymmetricKey )
 
-                    print(keys["symmetric"])
+                    #print(keys["symmetric"])
 
                     flags["iniProtocol"] = False
                     sock.sendall(b"got it")
@@ -119,7 +119,7 @@ def main():
                 password = input("Enter the password: ")
                 keys["symmetric"] = func.symmetricKeys_PBKDF(password)
 
-                print(keys["symmetric"])
+                #print(keys["symmetric"])
 
                 encryptedKey = func.encryptMessage(keys["publicReceived"], keys["symmetric"])
                 encryptedKey = base64.b64encode(encryptedKey)
