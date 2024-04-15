@@ -1,14 +1,14 @@
 # Importar modulo Cryto usando el comando
 # pip3 install pycryptodome
 
-from Crypto.Protocol.KDF import PBKDF2
-from Crypto.Hash import SHA512, SHA3_256
-from Crypto.Random import get_random_bytes
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-from Crypto.Signature import PKCS1_v1_5
+from Cryptodome.Protocol.KDF import PBKDF2
+from Cryptodome.Hash import SHA512, SHA3_256
+from Cryptodome.Random import get_random_bytes
+from Cryptodome.PublicKey import RSA
+from Cryptodome.Cipher import PKCS1_OAEP
+from Cryptodome.Cipher import AES
+from Cryptodome.Util.Padding import pad, unpad
+from Cryptodome.Signature import PKCS1_v1_5
 
 import hmac
 import hashlib
