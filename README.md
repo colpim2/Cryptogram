@@ -67,4 +67,4 @@ The command-line interface (CLI) will prompt for a password. This will be used t
 
 ## 4. Video <a name="video"></a>
 
-https://youtu.be/
+[Google Drive](https://drive.google.com/file/d/1yd7FLt54SdV4cJm7lVE69lV93GwPRGA-/view?usp=sharing)
