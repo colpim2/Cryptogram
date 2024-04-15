@@ -1,3 +1,4 @@
+
 # pip install flask
 # pip install flask-socketio
 
@@ -10,7 +11,7 @@ import socketio
 import base64
 import functions as func
 import sys
-from Cryptodome.PublicKey import RSA
+from Crypto.PublicKey import RSA
 
 # server_ip = sys.argv[1]
 # server_port = sys.argv[2]
@@ -46,7 +47,7 @@ def sendPublicKey(publicKey):
             if conection == False:
                 sio.connect('http://127.0.0.1:5001')
                 conection = True
-                print("Conexion establecida")
+                #print("Conexion establecida")
                 sio.emit('public_key',publicKey)
                 print("Llave publica enviada ")
                 sent_key = True
@@ -65,7 +66,7 @@ def sendSymmetricKey(symmetrickKey):
         if conection == False:
             conection = True
             sio.connect('http://127.0.0.1:5001')
-            print("Conexion establecida")
+            #print("Conexion establecida")
         sio.emit('symmetrick_key',symmetrickKey)
     except Exception as e:
         print("Error")
@@ -102,13 +103,13 @@ def home():
             while keys["publicReceived"] is None:
                 continue
 
-            encryptedKey = func.encryptMessage(RSA.import_key(keys["publicReceived"]), keys["symmetric"])
-            print(encryptedKey)
+            encryptedKey = func.encryptMessage(keys["publicReceived"], keys["symmetric"])
+            #print(encryptedKey)
             encryptedKey = base64.b64encode(encryptedKey)
-            print(encryptedKey)
+            #print(encryptedKey)
             encryptedKey = b"SymmetricKey:" + encryptedKey
-            print("Llave simetrica enviada" + str(type(encryptedKey)))
-            print(encryptedKey)
+            #print("Llave simetrica enviada" + str(type(encryptedKey)))
+            #print(encryptedKey)
             sendSymmetricKey(encryptedKey)
 
         return redirect(url_for("chat"))
@@ -123,32 +124,34 @@ def chat():
 @socketio.on("connect")
 def connect(auth):
     name = session.get("name")
-    print(f"{name} joined")
+    #print(f"{name} joined")
 
 @socketio.on("disconnect")
 def disconnect():
     name = session.get("name")
-    print(f"{name} has left")
+    #print(f"{name} has left")
 
 @socketio.on("public_key")
 def receivePublicKey(data_PK):
+    global keys
     """Function that receives a Public Key"""
-    keys["publicReceived"] = data_PK
-    print("Llave pública recibida")
-    print(data_PK)
+    #print("Llave pública recibida")
+    keys["publicReceived"] = RSA.import_key(data_PK)
+    
+    #print(data_PK)
 
 @socketio.on("symmetrick_key")
 def receiveSymmetricKey(data_SK):
     """Function that receives the encrypted symmetric Key"""
     encryptedSymmetricKey = base64.b64decode(data_SK)
-    keys["symmetric"] = func.decryptMessage(RSA.import_key(keys["private"]), encryptedSymmetricKey)
+    keys["symmetric"] = func.decryptMessage(keys["key"], encryptedSymmetricKey)
 
 @socketio.on("message")
 def receiveMessageFromWeb(data):
     """Functions that receives the messages from the web page and encrypts it using the symmetric key"""
-    # print(f"{session.get('name')} said:" + data)
+    # #print(f"{session.get('name')} said:" + data)
     message = func.encryptMessageAES(keys["symmetric"], data)
-    signature = func.signMessage(message, keys["private"])
+    signature = func.signMessage(message, keys["key"])
     signature = base64.b64encode(signature)
 
     sendMessage(message+b"<delimiter>"+signature)
@@ -157,17 +160,17 @@ def receiveMessageFromWeb(data):
 @socketio.on("inter_message")
 def receiveEncryptedMessage(data):
     """Functiont that receives a message from other host and decrypts it to send it to the web page"""
-    # print(f"{session.get('name')} said:" + data)
+    # #print(f"{session.get('name')} said:" + data)
     message, signature = data.split(b"<delimiter>")
     signature = base64.b64decode(signature)
     
     if func.verifySignature(message, signature, keys["publicReceived"]):
         message = func.decryptMessageAES(keys["symmetric"], message)
         message = message.decode()
-        # print('\nVerified message received:', message)
+        # #print('\nVerified message received:', message)
         socketio.emit('message', message)
     else: 
-        # print('\nThe message has been corrupted.')
+        # #print('\nThe message has been corrupted.')
         socketio.emit('message', "The message has been corrupted.")
 
 def sendMessage(message):
@@ -177,7 +180,7 @@ def sendMessage(message):
         if conection == False:
             conection = True
             sio.connect('http://127.0.0.1:5001')
-            print("Conexion establecida")
+            #print("Conexion establecida")
         sio.emit('inter_message',message)
     except Exception as e:
         print("Error")

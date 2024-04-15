@@ -1,15 +1,15 @@
 # Importar modulo Cryto usando el comando
 # pip3 install pycryptodome
 
-from Cryptodome.Protocol.KDF import PBKDF2
-from Cryptodome.Hash import SHA512, SHA3_256
-from Cryptodome.Random import get_random_bytes
-from Cryptodome.PublicKey import RSA
-from Cryptodome.Cipher import PKCS1_OAEP
-from Cryptodome.Cipher import AES
-from Cryptodome.Util.Padding import pad, unpad
-from Cryptodome.Signature import PKCS1_v1_5
-
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Hash import SHA512, SHA3_256
+from Crypto.Random import get_random_bytes
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Signature import PKCS1_v1_5
+import base64
 import hmac
 import hashlib
 import pickle 
@@ -76,8 +76,7 @@ def encryptMessage(publicKey, message):
     return ciphertext
 
 def decryptMessage(privateKey, ciphertext):
-    key = RSA.import_key(privateKey)
-    cipher = PKCS1_OAEP.new(key)
+    cipher = PKCS1_OAEP.new(privateKey)
     plaintext = cipher.decrypt(ciphertext)
     return plaintext
 
@@ -103,7 +102,6 @@ def decryptMessageAES(symmetricKey, ciphertext):
     return message
 
 def signMessage(message, privateKey):
-    privateKey = RSA.import_key(privateKey)
     h = SHA3_256.new(message)
     signature = PKCS1_v1_5.new(privateKey)
     return signature.sign(h)
