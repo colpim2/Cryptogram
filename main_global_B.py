@@ -1,6 +1,12 @@
 # pip install flask
 # pip install flask-socketio
 
+# Andres Urbano Andrea  & 315133431 \\
+# Aguilar Corona Fernanda & 317018549 \\
+# Barrios López Francisco & 317165935 \\
+# Castillo Montes Pamela & 317165935 \\
+# Ramirez Gómez Maria Emilia & 317341612 \\
+
 from flask import Flask, render_template, request, session, redirect, url_for
 # Libraries for exchange of information
 from flask_socketio import send,SocketIO,emit

@@ -1,6 +1,12 @@
 import socket
 import threading
 
+# Andres Urbano Andrea  & 315133431 \\
+# Aguilar Corona Fernanda & 317018549 \\
+# Barrios López Francisco & 317165935 \\
+# Castillo Montes Pamela & 317165935 \\
+# Ramirez Gómez Maria Emilia & 317341612 \\
+
 # Configure the server
 HOST = '127.0.0.1'  # Local IP address
 PORT = 65431        # Port to listen for connections

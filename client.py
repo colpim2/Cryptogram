@@ -1,3 +1,12 @@
+
+# Andres Urbano Andrea  & 315133431 \\
+# Aguilar Corona Fernanda & 317018549 \\
+# Barrios López Francisco & 317165935 \\
+# Castillo Montes Pamela & 317165935 \\
+# Ramirez Gómez Maria Emilia & 317341612 \\
+  
+
+
 import socket
 import threading
 import functions2 as func

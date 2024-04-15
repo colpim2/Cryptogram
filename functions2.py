@@ -1,6 +1,12 @@
 # Importar modulo Cryto usando el comando
 # pip3 install pycryptodome
 
+# Andres Urbano Andrea  & 315133431 \\
+# Aguilar Corona Fernanda & 317018549 \\
+# Barrios López Francisco & 317165935 \\
+# Castillo Montes Pamela & 317165935 \\
+# Ramirez Gómez Maria Emilia & 317341612 \\
+
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Hash import SHA512, SHA3_256
 from Crypto.Random import get_random_bytes
