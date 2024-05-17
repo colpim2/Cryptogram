@@ -1,21 +1,15 @@
 # Importar modulo Cryto usando el comando
 # pip3 install pycryptodome
 
-# Andres Urbano Andrea  & 315133431 \\
-# Aguilar Corona Fernanda & 317018549 \\
-# Barrios López Francisco & 317165935 \\
-# Castillo Montes Pamela & 317165935 \\
-# Ramirez Gómez Maria Emilia & 317341612 \\
+from Cryptodome.Protocol.KDF import PBKDF2
+from Cryptodome.Hash import SHA512, SHA3_256
+from Cryptodome.Random import get_random_bytes
+from Cryptodome.PublicKey import RSA
+from Cryptodome.Cipher import PKCS1_OAEP
+from Cryptodome.Cipher import AES
+from Cryptodome.Util.Padding import pad, unpad
+from Cryptodome.Signature import PKCS1_v1_5
 
-from Crypto.Protocol.KDF import PBKDF2
-from Crypto.Hash import SHA512, SHA3_256
-from Crypto.Random import get_random_bytes
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-from Crypto.Signature import PKCS1_v1_5
-import base64
 import hmac
 import hashlib
 import pickle 
@@ -54,14 +48,13 @@ def symmetricKeys_PBKDF(password):
 
 def generatingAsymmetricKeys():
 
-    key = RSA.generate(2048)
+    key = RSA.generate(3072)
     publicKey = key.publickey().export_key()
     privateKey = key.export_key()
 
     return publicKey, privateKey, key
 
 # 2. Store keys
-# FRANCISCO
 def saveCipherPrivateKey(key, password, path):
     cipher_privatekey = key.export_key(passphrase=password, pkcs=8, protection="scryptAndAES128-CBC")
     with open(path, 'wb') as f:
@@ -70,7 +63,7 @@ def saveCipherPrivateKey(key, password, path):
 def getCipherPrivateKey(password, path):
     with open(path, 'rb') as f:
         private_key_encrypted = f.read()
-    password = "mypassword"
+    # password = "mypassword"
     private_key = RSA.import_key(private_key_encrypted, passphrase=password)
     return private_key.export_key()
 
@@ -81,15 +74,16 @@ def encryptMessage(publicKey, message):
     ciphertext = cipher.encrypt(message)
     return ciphertext
 
-def decryptMessage(privateKey, ciphertext):
-    cipher = PKCS1_OAEP.new(privateKey)
+def decryptMessage(Key_pair, ciphertext):
+    # key = RSA.import_key(privateKey)
+    cipher = PKCS1_OAEP.new(Key_pair)
     plaintext = cipher.decrypt(ciphertext)
     return plaintext
 
 
 # 4. Encrypt message using the random key using AES
 
-def encryptMessageAES(symmetricKey, message):
+def encryptMessageAES(symmetricKey, message: str):
     message = message.encode()
     iv = get_random_bytes(AES.block_size) #initializer vector
     message = pad(message, AES.block_size)
@@ -108,6 +102,7 @@ def decryptMessageAES(symmetricKey, ciphertext):
     return message
 
 def signMessage(message, privateKey):
+    privateKey = RSA.import_key(privateKey)
     h = SHA3_256.new(message)
     signature = PKCS1_v1_5.new(privateKey)
     return signature.sign(h)
@@ -115,12 +110,8 @@ def signMessage(message, privateKey):
 def verifySignature(message, signature, publicKey):
     h = SHA3_256.new(message)
     verifier = PKCS1_v1_5.new(publicKey)
-    if verifier.verify(h,signature):
-        return True
-    else :
-        return False 
-
-
+    return True if verifier.verify(h, signature) else False
+    
 # 5. Apply digital signature to message using Bob's private key
 def digitalSignature_Hash(privatekey,publickey):
     data = 'Hello World Again!'.encode('utf8')  # message in cipher text

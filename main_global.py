@@ -1,12 +1,6 @@
 # pip install flask
 # pip install flask-socketio
 
-# Andres Urbano Andrea  & 315133431 \\
-# Aguilar Corona Fernanda & 317018549 \\
-# Barrios López Francisco & 317165935 \\
-# Castillo Montes Pamela & 317165935 \\
-# Ramirez Gómez Maria Emilia & 317341612 \\
-
 from flask import Flask, render_template, request, session, redirect, url_for
 # Libraries for exchange of information
 from flask_socketio import send,SocketIO,emit
@@ -21,6 +15,7 @@ from Cryptodome.PublicKey import RSA
 share_symmetric_pass = True
 sent_key = False
 
+name = ""
 password = None
 
 keys = {
@@ -77,6 +72,7 @@ def sendSymmetricKey(symmetrickKey):
 def home():
     """First function that show the login page to the users, generate the RSA keys and send the public key, takes a password and
     generated a key based on the password, and send it"""
+    global name
     global password
     global keys
 
@@ -110,13 +106,12 @@ def home():
             encryptedKey = func.encryptMessage(keys["publicReceived"], keys["symmetric"])
             # print("Llave simetrica encriptada \n" + encryptedKey.decode())
             encryptedKey = base64.b64encode(encryptedKey)
-            print("\n")
-            print(encryptedKey)
-            # encryptedKey = b"SymmetricKey:" + encryptedKey
-            # sendSymmetricKey(encryptedKey)
-            sendSymmetricKey(base64.b64encode(keys["symmetric"]))
-            # print("Llave simetrica enviada" + str(type(encryptedKey)))
             # print(encryptedKey)
+            # encryptedKey = b"SymmetricKey:" + encryptedKey
+            sendSymmetricKey(encryptedKey)
+            # sendSymmetricKey(base64.b64encode(keys["symmetric"]))
+            print("Llave simetrica enviada" + str(type(encryptedKey)))
+            print(encryptedKey)
 
         return redirect(url_for("chat"))
 
@@ -155,30 +150,32 @@ def receiveSymmetricKey(data_SK):
 @socketio.on("message")
 def receiveMessageFromWeb(data):
     """Functions that receives the messages from the web page and encrypts it using the symmetric key"""
+    global name
     # print(f"{session.get('name')} said:" + data)
-    # message = func.encryptMessageAES(keys["symmetric"], data)
-    # signature = func.signMessage(message, keys["private"])
-    # signature = base64.b64encode(signature)
+    """message = func.encryptMessageAES(keys["symmetric"], name + ": " + data)
+    signature = func.signMessage(message, keys["private"])
+    signature = base64.b64encode(signature)
 
-    # sendMessage(message+b"<delimiter>"+signature)
-    sendMessage(data)
+    sendMessage(message+b"<delimiter>"+signature)"""
+    sendMessage(name + ": " + data)
     socketio.emit('message', data)
 
 @socketio.on("inter_message")
 def receiveEncryptedMessage(data):
     """Functiont that receives a message from other host and decrypts it to send it to the web page"""
+    global name
     # print(f"{session.get('name')} said:" + data)
-    #message, signature = data.split(b"<delimiter>")
-    #signature = base64.b64decode(signature)
+    """message, signature = data.split(b"<delimiter>")
+    signature = base64.b64decode(signature)
     
-    #if func.verifySignature(message, signature, keys["publicReceived"]):
-    #    message = func.decryptMessageAES(keys["symmetric"], message)
-    #    message = message.decode()
-        # print('\nVerified message received:', message)
-    #    socketio.emit('message', message)
-    #else: 
-    #    # print('\nThe message has been corrupted.')
-    #    socketio.emit('message', "The message has been corrupted.")
+    if func.verifySignature(message, signature, keys["publicReceived"]):
+        message = func.decryptMessageAES(keys["symmetric"], message)
+        message = message.decode()
+        print('\nVerified message received:', message)
+        socketio.emit('message', message)
+    else: 
+        print('\nThe message has been corrupted.')
+        socketio.emit('message', "The message has been corrupted.")"""
     socketio.emit('message', data)
 
 def sendMessage(message):
